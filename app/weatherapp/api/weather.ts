@@ -1,13 +1,11 @@
-import {NextApiRequest, NextApiResponse} from "next";
+import {NextResponse} from "next/server";
 
-export default async function handler(
-    req: NextApiRequest,
-    res: NextApiResponse
-) {
-    const {place} = req.query;
+export async function GET(req: Request) {
+    const {searchParams} = new URL(req.url);
+    const place = searchParams.get("place");
 
     if (!place) {
-        return res.status(400).json({error: "Place is required"});
+        return NextResponse.json({error: "Place is required"}, {status: 400});
     }
 
     const API_KEY = "6e16a80e48a54f4bbe2192532252203";
@@ -16,8 +14,11 @@ export default async function handler(
     try {
         const response = await fetch(API_URL);
         const data = await response.json();
-        return res.status(200).json(data);
+        return NextResponse.json(data);
     } catch (error) {
-        return res.status(500).json({error: "Failed to fetch weather data"});
+        return NextResponse.json(
+            {error: "Failed to fetch weather data"},
+            {status: 500}
+        );
     }
 }
