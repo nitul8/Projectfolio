@@ -14,12 +14,14 @@ const TicTacToe = () => {
     const [track, setTrack] = useState<number[]>([]);
 
     useEffect(() => {
-        console.log("Updated track:", track);
-    }, [track]);
-
-    useEffect(() => {
         checkWinner(board);
     }, [board]);
+
+    useEffect(() => {
+        if (mode && track.length === 9 && !winner) {
+            setTimeout(clearTwoRandomBoxes, 500); // Delay for smoother gameplay
+        }
+    }, [track, winner, mode]);
 
     const checkWinner = (board: string[]) => {
         const winConditions = [
@@ -40,23 +42,29 @@ const TicTacToe = () => {
         }
     };
 
+    const clearTwoRandomBoxes = () => {
+        let move1 = Math.floor(Math.random() * 9);
+        let move2 = Math.floor(Math.random() * 9);
+
+        while (move2 === move1 || !board[move1] || !board[move2]) {
+            move1 = Math.floor(Math.random() * 9);
+            move2 = Math.floor(Math.random() * 9);
+        }
+
+        setBoard((prevBoard) => {
+            const newBoard = [...prevBoard];
+            newBoard[move1] = null;
+            newBoard[move2] = null;
+            return newBoard;
+        });
+
+        setTrack((prevTrack) =>
+            prevTrack.filter((id) => id !== move1 && id !== move2)
+        );
+    };
+
     const handleBox = (id: number) => {
         if (winner || board[id]) return;
-
-        setTrack((prevTrack) => {
-            const newTrack = [...prevTrack, id];
-
-            if (mode && newTrack.length >= 9) {
-                const oldestMove = newTrack.shift();
-                setBoard((prevBoard) => {
-                    const newBoard = [...prevBoard];
-                    if (oldestMove !== undefined) newBoard[oldestMove] = null;
-                    return newBoard;
-                });
-            }
-
-            return newTrack;
-        });
 
         setBoard((prevBoard) => {
             const newBoard = [...prevBoard];
@@ -64,6 +72,7 @@ const TicTacToe = () => {
             return newBoard;
         });
 
+        setTrack((prevTrack) => [...prevTrack, id]);
         setTurn((prevTurn) => (prevTurn === "X" ? "O" : "X"));
     };
 
@@ -82,11 +91,13 @@ const TicTacToe = () => {
                 {mode ? "Advanced Tic Tac Toe" : "Normal Tic Tac Toe"}
             </h1>
             <h2 className="text-md font-light text-center mb-2">
-                {track.length !== 9
-                    ? winner
-                        ? `Player ${winner} Wins`
-                        : `Player ${turn}'s Turn`
-                    : "Match Draw"}
+                {winner
+                    ? `Player ${winner} Wins 🎉`
+                    : track.length === 9
+                    ? mode
+                        ? "No winner, clearing two boxes..."
+                        : "Match Draw!"
+                    : `Player ${turn}'s Turn`}
             </h2>
             <div>
                 {[0, 3, 6].map((row) => (
